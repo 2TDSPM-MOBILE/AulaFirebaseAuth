@@ -1,12 +1,31 @@
 import { Link } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 
 export default function LoginScreen() {
   // Estados para armazenar os valores digitados
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+
+  const router = useRouter()//Hook para navegação
+
+  useEffect(()=>{
+    const verificarUsuarioLogado = async () =>{
+      try{
+        const usuarioSalvo = await AsyncStorage.getItem('@user')
+        if(usuarioSalvo){
+          router.push('/HomeScreen')//Redireciona para tela bem-vindo
+        }
+      }catch(error){
+        console.log("Error ao verificar login",error)
+      }
+    }
+    //Chamando a função
+    verificarUsuarioLogado()
+  },[])
 
   // Função para simular o envio do formulário
   const handleLogin= () => {
