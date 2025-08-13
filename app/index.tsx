@@ -3,6 +3,8 @@ import React, { useState,useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { signInWithEmailAndPassword, sendPasswordResetEmail} from 'firebase/auth';
+import {auth} from '../services/firebaseConfig'
 
 export default function LoginScreen() {
   // Estados para armazenar os valores digitados
@@ -33,9 +35,30 @@ export default function LoginScreen() {
       Alert.alert('Atenção', 'Preencha todos os campos!');
       return;
     }
-    Alert.alert('Sucesso ao logar', `Usuário logado com sucesso!`);
-    // Aqui você poderia fazer um fetch/axios para enviar ao backend
+    //Função para realizar o login/auth
+    signInWithEmailAndPassword(auth,email,senha)
+      .then(async(userCredential)=>{
+        const user = userCredential.user
+        await AsyncStorage.setItem('@user',JSON.stringify(user))
+        router.push('/HomeScreen')
+      })
+      .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          console.log(errorMessage)
+  });
   };
+
+  const esqueceuSenha = () =>{
+    if(!email){
+      alert("Digite seu e-mail para recuperar a senha")
+      return
+    }
+    sendPasswordResetEmail(auth,email)
+      .then(()=> alert("Enviado e-mail de recuperação senha"))
+      .catch((error)=>alert("Error ao enviar e-mail de redefinição de senha"))
+
+  }
 
   return (
     <View style={styles.container}>
@@ -69,6 +92,8 @@ export default function LoginScreen() {
       </TouchableOpacity>
 
       <Link href="CadastrarScreen" style={{marginTop:20,color:'white',marginLeft:150}}>Cadastre-se</Link>
+
+      <Text style={{marginTop:20,color:'white',marginLeft:130}} onPress={esqueceuSenha}>Esqueceu a senha</Text>
     </View>
   );
 }
