@@ -45,7 +45,14 @@ export default function LoginScreen() {
       .catch((error) => {
           const errorCode = error.code;
           const errorMessage = error.message;
+          console.log(errorCode)
           console.log(errorMessage)
+          if(error.code === "auth/network-request-failed"){
+            Alert.alert("Error","Verifique sua conexão")
+          }
+          if(error.code==="auth/invalid-credential"){
+            Alert.alert("Atenção","Verifique as credenciais")
+          }
   });
   };
 
