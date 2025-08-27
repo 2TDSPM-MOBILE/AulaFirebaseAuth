@@ -18,7 +18,9 @@ export default function ItemLoja(props: any) {
         Alert.alert("Confirmar Exclusão?","Tem certeza que deeja excluir o produto?",[
             {text:'Cancelar'},
             {text:'Excluir',onPress:async()=>await deleteDoc(doc(db,'items',props.id))}
-        ])
+        ],{
+            cancelable:true
+        })
        
     }
 
