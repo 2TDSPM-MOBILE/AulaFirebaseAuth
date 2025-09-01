@@ -5,10 +5,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { signInWithEmailAndPassword, sendPasswordResetEmail} from 'firebase/auth';
 import {auth} from '../services/firebaseConfig'
+import { useTheme } from '../src/context/ThemeContext';
 
 export default function LoginScreen() {
+  const{colors} = useTheme()
   // Estados para armazenar os valores digitados
-
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
 
@@ -68,9 +69,8 @@ export default function LoginScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.titulo}>Realizar login</Text>
-
+    <View style={[styles.container,{backgroundColor:colors.background}]}>
+      <Text style={[styles.titulo,{color:colors.text}]}>Realizar login</Text>
 
       {/* Campo Email */}
       <TextInput
@@ -98,9 +98,8 @@ export default function LoginScreen() {
         <Text style={styles.textoBotao}>Login</Text>
       </TouchableOpacity>
 
-      <Link href="CadastrarScreen" style={{marginTop:20,color:'white',marginLeft:150}}>Cadastre-se</Link>
-
-      <Text style={{marginTop:20,color:'white',marginLeft:130}} onPress={esqueceuSenha}>Esqueceu a senha</Text>
+      <Link href="CadastrarScreen" style={{marginTop:20,color:colors.text,marginLeft:150}}>Cadastre-se</Link>
+      <Text style={{marginTop:20,color:colors.text,marginLeft:130}} onPress={esqueceuSenha}>Esqueceu a senha</Text>
     </View>
   );
 }

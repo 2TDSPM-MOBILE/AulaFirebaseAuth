@@ -3,14 +3,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { addDoc,collection,db,getDocs } from "../services/firebaseConfig";
-
 import {auth} from '../services/firebaseConfig'
 import { deleteUser } from "firebase/auth";
 import ItemLoja from "../components/ItemLoja";
 import { useEffect, useState } from "react";
-
+import ThemeToggleButton from "../src/components/ThemeToggleButton";
+import { useTheme } from "../src/context/ThemeContext";
 
 export default function HomeScreen(){
+    const{colors}=useTheme()//Pega o esquema de cores
     const router = useRouter()//Hook de navegação
     const[nomeProduto,setNomeProduto]=useState('')
     interface Item{
@@ -88,14 +89,17 @@ export default function HomeScreen(){
         buscarItems()
     },[listaItems])
 
+   
+
     return(
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container,{backgroundColor:colors.background}]}>
             <KeyboardAvoidingView //É um componente que ajuste o layout automaticamente
                 style={styles.container}
                 behavior={Platform.OS==='ios'?'padding':'height'}
                 keyboardVerticalOffset={20}//desloca o conteúdo verticalmente
             >
-            <Text>Seja bem-vindo - Você está Logado!!</Text>
+            <ThemeToggleButton/>
+            <Text style={[styles.texto,{color:colors.text}]}>Seja bem-vindo - Você está Logado!!</Text>
             <Button title="Sair da conta" onPress={realizarLogoff}/>
             <Button title="Excluir conta" color='red' onPress={excluirConta}/>
             <Button title="Alterar Senha" onPress={()=>router.push('AlterarSenhaScreen')}/>
@@ -136,5 +140,6 @@ const styles = StyleSheet.create({
        alignSelf:'center',
        borderRadius:10,
        marginTop:20
-    }
+    },
+    texto:{fontSize:16}
 })
