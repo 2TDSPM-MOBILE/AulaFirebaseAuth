@@ -4,10 +4,22 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { signInWithEmailAndPassword, sendPasswordResetEmail} from 'firebase/auth';
-import {auth} from '../services/firebaseConfig'
+import {auth} from '../src/services/firebaseConfig'
 import { useTheme } from '../src/context/ThemeContext';
+import ThemeToggleButton from '../src/components/ThemeToggleButton';
+import{useTranslation} from 'react-i18next'
 
 export default function LoginScreen() {
+  //A função t é utilizada para buscar tradução
+  //no idioma atual
+  const{t,i18n}=useTranslation()
+
+  //Função para mudar o idioma
+  const mudarIdioma = (lang:string)=>{
+      i18n.changeLanguage(lang)
+  }
+
+  //Colors o esquema de cores definida no ThemeContext
   const{colors} = useTheme()
   // Estados para armazenar os valores digitados
   const [email, setEmail] = useState('');
@@ -70,13 +82,13 @@ export default function LoginScreen() {
 
   return (
     <View style={[styles.container,{backgroundColor:colors.background}]}>
-      <Text style={[styles.titulo,{color:colors.text}]}>Realizar login</Text>
+      <Text style={[styles.titulo,{color:colors.text}]}>{t("login")}</Text>
 
       {/* Campo Email */}
       <TextInput
         style={styles.input}
         placeholder="E-mail"
-        placeholderTextColor="#aaa"
+        placeholderTextColor={colors.text}
         keyboardType="email-address"
         autoCapitalize="none"
         value={email}
@@ -86,17 +98,34 @@ export default function LoginScreen() {
       {/* Campo Senha */}
       <TextInput
         style={styles.input}
-        placeholder="Senha"
-        placeholderTextColor="#aaa"
+        placeholder={t("password")}
+        placeholderTextColor={colors.text}
         secureTextEntry
         value={senha}
         onChangeText={setSenha}
       />
 
+      <View style={{flexDirection:'row',justifyContent:'center'}}>
+        <TouchableOpacity 
+          style={[styles.botaoIdioma,{backgroundColor:'#007bff'}]}
+          onPress={()=>mudarIdioma('pt')}
+        >
+          <Text style={[,{color:colors.text}]}>PT</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+        style={[styles.botaoIdioma,{backgroundColor:'#328132'}]}
+         onPress={()=>mudarIdioma('en')}
+        >
+          <Text style={[,{color:colors.text}]}>EN</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Botão */}
       <TouchableOpacity style={styles.botao} onPress={handleLogin}>
         <Text style={styles.textoBotao}>Login</Text>
       </TouchableOpacity>
+
+      <ThemeToggleButton/>
 
       <Link href="CadastrarScreen" style={{marginTop:20,color:colors.text,marginLeft:150}}>Cadastre-se</Link>
       <Text style={{marginTop:20,color:colors.text,marginLeft:130}} onPress={esqueceuSenha}>Esqueceu a senha</Text>
@@ -120,8 +149,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   input: {
-    backgroundColor: '#1E1E1E',
-    color: '#fff',
+    
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
@@ -140,4 +168,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  botaoIdioma:{
+    padding:15,
+    width:"25%",
+    borderRadius:10,
+    alignItems:'center',
+    marginLeft:10,
+    marginBottom:10
+  }
 });
