@@ -112,6 +112,7 @@ export default function LoginScreen() {
         >
           <Text style={[,{color:colors.text}]}>PT</Text>
         </TouchableOpacity>
+        
         <TouchableOpacity
         style={[styles.botaoIdioma,{backgroundColor:'#328132'}]}
          onPress={()=>mudarIdioma('en')}
