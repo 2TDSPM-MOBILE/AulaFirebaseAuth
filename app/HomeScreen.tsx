@@ -15,8 +15,7 @@ import * as Device from "expo-device"
 //Configuração Global das notificações no foreground
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
-        shouldShowBanner: true, //exibe o banner de notificação
-        shouldShowList: true,//exibe no histórico
+        shouldShowAlert: true,//SDK 52 utiliza "Alert"
         shouldPlaySound: true, //habilita o som
         shouldSetBadge: false //não altera o badge do app
     })
@@ -26,6 +25,8 @@ export default function HomeScreen() {
     const { colors } = useTheme()//Pega o esquema de cores
     const router = useRouter()//Hook de navegação
     const [nomeProduto, setNomeProduto] = useState('')
+    const [expoPushToken, setExpoPushToken] = useState<string | null>(null)
+
     interface Item {
         id: string;
         nomeProduto: string;
@@ -107,41 +108,59 @@ export default function HomeScreen() {
                 body: "Aproveite as promoções do dia 08/09/2025"
             },
             trigger: {
-                type: "timeInterval", //Tipo do trigger: intervalo de tempo
                 seconds: 2, //aguarda 2 segundos antes de disparar
                 repeats: false //não repete
             } as Notifications.TimeIntervalTriggerInput
         })
     }
 
+    const registerForPushNotificationsAsync = async (): Promise<string | null> => {
+        try {
+            const tokenData = await Notifications.getExpoPushTokenAsync()
+            const token = tokenData.data
+            console.log("Expo Push Token gerado: ", token)
+            return token
+        } catch (error) {
+            console.log("Erro ao gerar token: ", error)
+            return null
+        }
+    }
+
+    useEffect(()=>{
+        const subscription = Notifications.addNotificationReceivedListener(notification=>{
+            console.log("Notificação recebida: ",notification)
+        })
+        //Remove o listener para evitar múltiplas chamadas.
+        return ()=>subscription.remove()
+    },[])
+
+    useEffect(() => {
+        (async () => {
+            //Chama a função para registar o dispositivo com o serviço de notificação remoto
+            const token = await registerForPushNotificationsAsync()
+            //Passa o token para o estado
+            setExpoPushToken(token)
+        })()
+    }, [])
+
     useEffect(() => {
         buscarItems()
     }, [listaItems])
 
+    //useEffect que solicita permissão para enviar notificação
     useEffect(() => {
         (async () => {
-            if (Device.isDevice) {
-                //Verifica se já tem permissão da notificação
-                const { status: existingStatus } = await Notifications.getPermissionsAsync()
-                let finalStatus = existingStatus
+            //Verifica se já tem permissão da notificação
+            const { status: existingStatus } = await Notifications.getPermissionsAsync()
+            let finalStatus = existingStatus
 
-                //Se não houver premissão concedida, vms solicitar o usuário
-                if (existingStatus !== "granted") {
-                    const { status } = await Notifications.requestPermissionsAsync()
-                    finalStatus = status
-                }
-
-                //Mesmo com o request ainda não foi permito o acesso a notificação
-                if (finalStatus !== "granted") {
-                    alert("Permissão de notificação não foram concedidas.")
-                    return
-                }
-            }else{
-                alert("Vc precisa de um disposito físico para receber as notificações.")
-                return
+            //Se não houver premissão concedida, vms solicitar o usuário
+            if (existingStatus !== "granted") {
+                const { status } = await Notifications.requestPermissionsAsync()
+                finalStatus = status
             }
         })()
-    },[])
+    }, [])
 
 
     return (
