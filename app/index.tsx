@@ -1,88 +1,96 @@
 import { Link } from 'expo-router';
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import { signInWithEmailAndPassword, sendPasswordResetEmail} from 'firebase/auth';
-import {auth} from '../src/services/firebaseConfig'
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '../src/services/firebaseConfig'
 import { useTheme } from '../src/context/ThemeContext';
 import ThemeToggleButton from '../src/components/ThemeToggleButton';
-import{useTranslation} from 'react-i18next'
+import { useTranslation } from 'react-i18next'
+import GoogleSignIn from '../src/components/ButtonGoogleSignIn';
+import { useAuth } from '@clerk/clerk-expo';
 
 export default function LoginScreen() {
+  const { isSignedIn, isLoaded } = useAuth()
+
   //A função t é utilizada para buscar tradução
   //no idioma atual
-  const{t,i18n}=useTranslation()
+  const { t, i18n } = useTranslation()
 
   //Função para mudar o idioma
-  const mudarIdioma = (lang:string)=>{
-      i18n.changeLanguage(lang)
+  const mudarIdioma = (lang: string) => {
+    i18n.changeLanguage(lang)
   }
 
   //Colors o esquema de cores definida no ThemeContext
-  const{colors} = useTheme()
+  const { colors } = useTheme()
   // Estados para armazenar os valores digitados
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
 
   const router = useRouter()//Hook para navegação
 
-  useEffect(()=>{
-    const verificarUsuarioLogado = async () =>{
-      try{
-        const usuarioSalvo = await AsyncStorage.getItem('@user')
-        if(usuarioSalvo){
-          router.push('/HomeScreen')//Redireciona para tela bem-vindo
-        }
-      }catch(error){
-        console.log("Error ao verificar login",error)
-      }
+  const verificarUsuarioLogado = async () => {
+    if (!isLoaded) return;//Esperar o Clerk carregar..
+    if (isSignedIn) {
+      console.log("Entrou no SignedIn")
+      router.replace("/HomeScreen")
+      return
     }
+
+    const usuarioSalvo = await AsyncStorage.getItem('@user')
+    if (usuarioSalvo) {
+      router.push('/HomeScreen')//Redireciona para tela bem-vindo
+    }
+
+  }
+  useEffect(() => {
     //Chamando a função
     verificarUsuarioLogado()
-  },[])
+  }, [isLoaded,isSignedIn])
 
   // Função para simular o envio do formulário
-  const handleLogin= () => {
-    if ( !email || !senha) {
+  const handleLogin = () => {
+    if (!email || !senha) {
       Alert.alert('Atenção', 'Preencha todos os campos!');
       return;
     }
     //Função para realizar o login/auth
-    signInWithEmailAndPassword(auth,email,senha)
-      .then(async(userCredential)=>{
+    signInWithEmailAndPassword(auth, email, senha)
+      .then(async (userCredential) => {
         const user = userCredential.user
-        await AsyncStorage.setItem('@user',JSON.stringify(user))
+        await AsyncStorage.setItem('@user', JSON.stringify(user))
         router.push('/HomeScreen')
       })
       .catch((error) => {
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          console.log(errorCode)
-          console.log(errorMessage)
-          if(error.code === "auth/network-request-failed"){
-            Alert.alert("Error","Verifique sua conexão")
-          }
-          if(error.code==="auth/invalid-credential"){
-            Alert.alert("Atenção","Verifique as credenciais")
-          }
-  });
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(errorCode)
+        console.log(errorMessage)
+        if (error.code === "auth/network-request-failed") {
+          Alert.alert("Error", "Verifique sua conexão")
+        }
+        if (error.code === "auth/invalid-credential") {
+          Alert.alert("Atenção", "Verifique as credenciais")
+        }
+      });
   };
 
-  const esqueceuSenha = () =>{
-    if(!email){
+  const esqueceuSenha = () => {
+    if (!email) {
       alert("Digite seu e-mail para recuperar a senha")
       return
     }
-    sendPasswordResetEmail(auth,email)
-      .then(()=> alert("Enviado e-mail de recuperação senha"))
-      .catch((error)=>alert("Error ao enviar e-mail de redefinição de senha"))
+    sendPasswordResetEmail(auth, email)
+      .then(() => alert("Enviado e-mail de recuperação senha"))
+      .catch((error) => alert("Error ao enviar e-mail de redefinição de senha"))
 
   }
 
   return (
-    <View style={[styles.container,{backgroundColor:colors.background}]}>
-      <Text style={[styles.titulo,{color:colors.text}]}>{t("login")}</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.titulo, { color: colors.text }]}>{t("login")}</Text>
 
       {/* Campo Email */}
       <TextInput
@@ -105,19 +113,19 @@ export default function LoginScreen() {
         onChangeText={setSenha}
       />
 
-      <View style={{flexDirection:'row',justifyContent:'center'}}>
-        <TouchableOpacity 
-          style={[styles.botaoIdioma,{backgroundColor:'#007bff'}]}
-          onPress={()=>mudarIdioma('pt')}
-        >
-          <Text style={[,{color:colors.text}]}>PT</Text>
-        </TouchableOpacity>
-        
+      <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
         <TouchableOpacity
-        style={[styles.botaoIdioma,{backgroundColor:'#328132'}]}
-         onPress={()=>mudarIdioma('en')}
+          style={[styles.botaoIdioma, { backgroundColor: '#007bff' }]}
+          onPress={() => mudarIdioma('pt')}
         >
-          <Text style={[,{color:colors.text}]}>EN</Text>
+          <Text style={[, { color: colors.text }]}>PT</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.botaoIdioma, { backgroundColor: '#328132' }]}
+          onPress={() => mudarIdioma('en')}
+        >
+          <Text style={[, { color: colors.text }]}>EN</Text>
         </TouchableOpacity>
       </View>
 
@@ -126,10 +134,12 @@ export default function LoginScreen() {
         <Text style={styles.textoBotao}>Login</Text>
       </TouchableOpacity>
 
-      <ThemeToggleButton/>
+      <GoogleSignIn />
 
-      <Link href="CadastrarScreen" style={{marginTop:20,color:colors.text,marginLeft:150}}>Cadastre-se</Link>
-      <Text style={{marginTop:20,color:colors.text,marginLeft:130}} onPress={esqueceuSenha}>Esqueceu a senha</Text>
+      <ThemeToggleButton />
+
+      <Link href="CadastrarScreen" style={{ marginTop: 20, color: colors.text, marginLeft: 150 }}>Cadastre-se</Link>
+      <Text style={{ marginTop: 20, color: colors.text, marginLeft: 130 }} onPress={esqueceuSenha}>Esqueceu a senha</Text>
     </View>
   );
 }
@@ -150,7 +160,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   input: {
-    
+
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
@@ -169,12 +179,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  botaoIdioma:{
-    padding:15,
-    width:"25%",
-    borderRadius:10,
-    alignItems:'center',
-    marginLeft:10,
-    marginBottom:10
+  botaoIdioma: {
+    padding: 15,
+    width: "25%",
+    borderRadius: 10,
+    alignItems: 'center',
+    marginLeft: 10,
+    marginBottom: 10
   }
 });

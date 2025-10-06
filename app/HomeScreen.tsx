@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import ThemeToggleButton from "../src/components/ThemeToggleButton";
 import { useTheme } from "../src/context/ThemeContext";
 import * as Notifications from "expo-notifications"
-import * as Device from "expo-device"
+import { useAuth } from "@clerk/clerk-expo";
 
 //Configuração Global das notificações no foreground
 Notifications.setNotificationHandler({
@@ -22,6 +22,7 @@ Notifications.setNotificationHandler({
 })
 
 export default function HomeScreen() {
+    const{signOut} = useAuth()
     const { colors } = useTheme()//Pega o esquema de cores
     const router = useRouter()//Hook de navegação
     const [nomeProduto, setNomeProduto] = useState('')
@@ -36,6 +37,7 @@ export default function HomeScreen() {
 
     const realizarLogoff = async () => {
         await AsyncStorage.removeItem('@user')
+        await signOut()//Encerra a sessão Google
         router.push('/')//Redireciona para index.tsx
     }
 
